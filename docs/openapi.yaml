@@ -1,0 +1,141 @@
+openapi: 3.0.0
+x-explorer-enabled: false
+security: []
+info:
+  title: GameDay API
+  description: "A REST interface to manage GameDay related operations"
+  contact: {}
+  version: "1.0"
+servers:
+  - url: https://api.gameday.com/api
+    description: GameDay dev server
+x-amazon-apigateway-request-validators:
+  basic:
+    validateRequestBody: true
+    validateRequestParameters: true
+x-amazon-apigateway-gateway-responses:
+  BAD_REQUEST_BODY:
+    statusCode: "400"
+    responseTemplates:
+      application/json: '{ "errors": [ { "detail": "$context.error.message: $context.error.validationErrorString" } ] }'
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+      gatewayresponse.header.Cache-Control: "'no-store'"
+      gatewayresponse.header.Content-Security-Policy: "'frame-ancestors 'none''"
+      gatewayresponse.header.Strict-Transport-Security: "'max-age=31536000; includeSubDomains'"
+      gatewayresponse.header.X-FRAME-OPTIONS: "'DENY'"
+      gatewayresponse.header.X-Content-Type-Options: "'nosniff'"
+  ACCESS_DENIED:
+    statusCode: "403"
+    responseTemplates:
+      application/json: '{ "errors": [ { "detail": "Not authorized to access this resource" } ] }'
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+      gatewayresponse.header.Cache-Control: "'no-store'"
+      gatewayresponse.header.Content-Security-Policy: "'frame-ancestors 'none''"
+      gatewayresponse.header.Strict-Transport-Security: "'max-age=31536000; includeSubDomains'"
+      gatewayresponse.header.X-FRAME-OPTIONS: "'DENY'"
+      gatewayresponse.header.X-Content-Type-Options: "'nosniff'"
+paths:
+  /gameday/funkyfunc:
+    get:
+      summary: Get the funky func values
+      description: "Get the funky func values"
+      operationId: getFunkyFunk
+      parameters:
+        - name: funk
+          in: query
+          description: the funk of the funky func to return
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/funk"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      deprecated: false
+      x-amazon-apigateway-request-validator: "basic"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/FunkyFunc/arn}}:live/invocations"
+components:
+  responses:
+    NoContent:
+      description: "No Content"
+    BadRequest:
+      description: "Bad Request"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    NotFound:
+      description: "Not Found"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    Conflict:
+      description: "Conflict"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    Unauthorized:
+      description: "Unauthorized"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    Forbidden:
+      description: "Forbidden"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    InternalServerError:
+      description: "Internal Server Error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+  schemas:
+    error:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: the HTTP status code
+          example: 400
+        message:
+          type: string
+          description: a human readable message
+          example: "An error occured during [x]"
+    funk:
+      title: Funk
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              funk_id:
+                type: string
+                description: the id of the funk
+              value:
+                type: number
+                description: the value of the funk
+          description: the data for this funk
