@@ -31,5 +31,7 @@ sam deploy \
   --no-fail-on-empty-changeset \
   --stack-name "${STACK_NAME}" \
   --s3-prefix "${STACK_NAME}" \
+  --region "ap-southeast-2" \
+  --capabilities "CAPABILITY_IAM" "CAPABILITY_AUTO_EXPAND" \
   --resolve-s3 \
   || die "sam deploy failed"
