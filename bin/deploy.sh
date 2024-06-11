@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-die() { echo "${1:-ouch}" >&2; exit "${2:-1}"; }
+die() { echo "${1:-argh}"; exit ${2:-1}; }
 
 hash git  2>/dev/null || die "missing dep: git"
 hash sam  2>/dev/null || die "missing dep: sam"
