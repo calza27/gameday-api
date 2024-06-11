@@ -1,0 +1,172 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: gameday-api > Public API to serve GameDay related metrics
+
+Parameters:
+  VpcId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /network/vpc-id
+  SubnetIds:
+    Type: AWS::SSM::Parameter::Value<List<String>>
+    Default: /network/appSubnets
+
+Globals:
+  Function:
+    Handler: bootstrap
+    Runtime: provided.al2
+    Timeout: 300
+    MemorySize: 256
+    AutoPublishAlias: live
+    VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref SubnetIds
+      
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for api-processors
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow all traffic on port 443
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Lambda role for api-processors
+      Path: /
+      Policies:
+        - PolicyName: logs-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - arn:aws:logs:*:*:*
+        - PolicyName: network-access-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                Resource:
+                  - '*'
+
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${AWS::StackName}-access-logs'
+      RetentionInDays: 365
+
+  GameDayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Ref 'AWS::StackName'
+      StageName: api
+      Description: Public API to serve GameDay related metrics
+      OpenApiVersion: '3.0.0'
+      DefinitionBody:
+        'Fn::Transform':
+          Name: AWS::Include
+          Parameters:
+            Location: ./docs/openapi.yaml
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: "OFF"
+          MetricsEnabled: true
+          DataTraceEnabled: false
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","authorizeStatus":"$context.authorize.status","authorizerStatus":"$context.authorizer.status","authorizerLatency":"$context.authorizer.latency","authorizerRequestId":"$context.authorizer.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId", "errorMessage":"$context.error.message", "validationError":"$context.error.validationErrorString"}'
+
+  FunkyFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor'
+      CodeUri: ./cmd/bin/function
+      Role:
+        !GetAtt FunctionRole.Arn
+
+  FunkyFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FunkyFunc}"
+      RetentionInDays: 365
+
+  FunkyFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '${FunkyFunc.Arn}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  FunkyFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/FunkyFunc/arn'
+      Type: String
+      Value: !Sub '${FunkyFunc.Arn}'
+      Description: ARN for the Funky Func Processing Layer Handler
+
+  FunkyFuncNameParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/FunkyFunc/name'
+      Type: String
+      Value: !Ref FunkyFunc
+      Description: Name for the Funky Func Processing Layer Handler
+  
+  ApplyApiGatewayCloudwatchGlobal:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !Ref ApiGatewayCloudwatchGlobalRole
+
+  ApiGatewayCloudwatchGlobalRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ApiGatewayCloudwatchGlobalRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: '*'
