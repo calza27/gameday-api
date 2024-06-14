@@ -1,0 +1,5 @@
+---
+sec:datatype: application
+ops:name: GameDay-API
+ops:origin: github.com/calza27/gameday-api
+client: brett.pullyblank

@@ -102,6 +102,35 @@ Resources:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
         Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","authorizeStatus":"$context.authorize.status","authorizerStatus":"$context.authorizer.status","authorizerLatency":"$context.authorizer.latency","authorizerRequestId":"$context.authorizer.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId", "errorMessage":"$context.error.message", "validationError":"$context.error.validationErrorString"}'
 
+  GameDayApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SendMessageToSQSPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              Effect: Allow
+              Action: sqs:SendMessage
+              Resource: !GetAtt SimpleQueue.Arn
+  
+  GameDayApiRoleParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api/role/arn'
+      Type: String
+      Value: !GetAtt ApiRole.Arn
+      Description: ARN for the API Gateway Role
+
   FunkyFunc:
     Type: AWS::Serverless::Function
     Properties:
@@ -131,15 +160,29 @@ Resources:
       Type: String
       Value: !Sub '${FunkyFunc.Arn}'
       Description: ARN for the Funky Func Processing Layer Handler
+  
+  DLQSimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: DLQ-SimpleQueue
 
-  FunkyFuncNameParam:
+  SimpleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      QueueName: SimpleQueue.fifo
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DLQSimpleQueue.Arn
+        maxReceiveCount: 5
+
+  QueueNameParam:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: '/gameday-api-processor/function/FunkyFunc/name'
+      Name: '/gameday-api-queue/simple/name'
       Type: String
-      Value: !Ref FunkyFunc
-      Description: Name for the Funky Func Processing Layer Handler
-  
+      Value: !GetAtt SimpleQueue.QueueName
+      Description: Name for the Simple SQS Queue
+
   ApplyApiGatewayCloudwatchGlobal:
     Type: AWS::ApiGateway::Account
     Properties:

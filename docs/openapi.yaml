@@ -71,6 +71,55 @@ paths:
         type: "aws_proxy"
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/FunkyFunc/arn}}:live/invocations"
+  /gameday/make_data:
+    put:
+      summary: Create a funky func value
+      description: "Create a funky func value"
+      operationId: createData
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - thing
+              properties:
+                thing:
+                  type: string
+                  description: the data to put in DDB
+                  example: "BusCo"
+        required: true
+      responses:
+        "202":
+          description: "Success"
+        "400":
+          description: invalid request body
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      deprecated: false
+      x-amazon-apigateway-request-validator: "basic"
+      x-amazon-apigateway-integration:
+        type: AWS
+        httpMethod: POST
+        passthroughBehavior: NEVER
+        requestParameters:
+          integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
+        requestTemplates:
+          "application/json": "Action=SendMessage&MessageBody=$input.body"
+        credentials: "{{resolve:ssm:/gameday-api/role/arn}}"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/{{resolve:ssm:/gameday-api-queue/simple/name}}"
+        responses:
+          default:
+            statusCode: "202"
+            responseTemplates:
+              application/json: '{"message": "Record sent for processing"}'
 components:
   responses:
     NoContent:
