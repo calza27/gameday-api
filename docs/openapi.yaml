@@ -85,37 +85,37 @@ paths:
         type: "aws_proxy"
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/list/arn}}:live/invocations"
-  # /gameday/get/{id}:
-  #   get:
-  #     summary: Get a previously exported game by Id
-  #     description: "Get a previously exported game by Id"
-  #     operationId: getGame
-  #     parameters:
-  #       - name: id
-  #         in: path
-  #         description: the id of the exported game to get
-  #         required: true
-  #         schema:
-  #           type: string
-  #           format: uuid
-  #     responses:
-  #       "200":
-  #         description: "Success"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/exportedGame"
-  #       "404":
-  #         $ref: "#/components/responses/NotFound"
-  #       "500":
-  #         $ref: "#/components/responses/InternalServerError"
-  #     deprecated: false
-  #     x-amazon-apigateway-request-validator: "basic"
-  #     x-amazon-apigateway-integration:
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/getGame/arn}}:live/invocations"
+  /gameday/get/{id}:
+    get:
+      summary: Get a previously exported game by Id
+      description: "Get a previously exported game by Id"
+      operationId: getGame
+      parameters:
+        - name: id
+          in: path
+          description: the id of the exported game to get
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/exportedGame"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      deprecated: false
+      x-amazon-apigateway-request-validator: "basic"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/getGame/arn}}:live/invocations"
   # /gameday/getFileUrl/{file}:
   #   get:
   #     summary: Get the URL to access the file for the given file name

@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: gameday-api > Public API gateway to serve GameDay data export
+      
+Resources:
+  GameDayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Ref 'AWS::StackName'
+      StageName: api
+      Description: Public API to serve GameDay data export
+      OpenApiVersion: '3.0.0'
+      DefinitionBody:
+        'Fn::Transform':
+          Name: AWS::Include
+          Parameters:
+            Location: ./docs/openapi.yaml
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: "OFF"
+          MetricsEnabled: true
+          DataTraceEnabled: false
+
+  # ExportFuncResourceBasedPolicy:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !Sub '{{resolve:ssm:/gameday-api-processor/function/export/arn}}:live'
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  ListFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '{{resolve:ssm:/gameday-api-processor/function/list/arn}}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  GetGameFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '{{resolve:ssm:/gameday-api-processor/function/getGame/arn}}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  # GetFileUrlFuncResourceBasedPolicy:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !Sub '{{resolve:ssm:/gameday-api-processor/function/getFileUrl/arn}}:live'
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'

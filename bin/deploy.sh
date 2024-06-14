@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-die() { echo "${1:-argh}"; exit "${2:-1}"; }
+die() {
+  echo "${1:-argh}"
+  ls ./cmd/bin && rm -rf ./cmd/bin/
+  exit "${2:-1}"
+}
 
 hash sam  2>/dev/null || die "missing dep: sam"
 hash aws  2>/dev/null || die "missing dep: aws"
@@ -24,11 +28,24 @@ bucket_name=$(aws ssm get-parameter --profile "$profile" --name /s3/cfn-bucket/n
 #   cd ../..
 # done
 
-echo "~~~ Deploy SAM Stack"
+# echo "~~~ Deploy processor stack"
+# sam deploy \
+#   --tags "$tags" \
+#   --no-fail-on-empty-changeset \
+#   --s3-bucket "${bucket_name}" \
+#   --stack-name "${STACK_NAME}-processing" \
+#   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+#   --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-processing"
+
+echo "~~~ Deploy gateway stack"
 sam deploy \
   --tags "$tags" \
   --no-fail-on-empty-changeset \
   --s3-bucket "${bucket_name}" \
-  --stack-name "${STACK_NAME}" \
+  --stack-name "${STACK_NAME}-gateway" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-  --profile "${profile}"
+  --template "./gateway.yaml" \
+  --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-gateway"
+
+echo "~~ cleaning up"
+rm -rf ./cmd/bin/

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: gameday-api > Public API to serve GameDay data export
+Description: gameday-api > Public API processing to serve GameDay data export
 
 Parameters:
   VpcId:
@@ -28,6 +28,14 @@ Resources:
     Properties:
       BucketName: gameday-export-bucket
 
+  BucketNameParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/s3/name'
+      Type: String
+      Value: !Ref StorageBucket
+      Description: Name of the S3 bucket to store exports in
+  
   ExportDatabase:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -39,6 +47,14 @@ Resources:
         - AttributeName: id
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
+
+  DatabaseNameParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/ddb/name'
+      Type: String
+      Value: !Ref ExportDatabase
+      Description: Name of the DynamoDB dabase that export information is stored in
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -101,7 +117,7 @@ Resources:
                   - s3:DeleteObject
                 Resource:
                   - !GetAtt StorageBucket.Arn
-        - PolicyName: bucket-access-policy
+        - PolicyName: dynamoDB-access-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -113,35 +129,6 @@ Resources:
                   - dynamodb:Query
                 Resource:
                   - !GetAtt ExportDatabase.Arn
-
-  ApiGatewayLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub '${AWS::StackName}-access-logs'
-      RetentionInDays: 365
-
-  GameDayApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Ref 'AWS::StackName'
-      StageName: api
-      Description: Public API to serve GameDay data export
-      OpenApiVersion: '3.0.0'
-      DefinitionBody:
-        'Fn::Transform':
-          Name: AWS::Include
-          Parameters:
-            Location: ./docs/openapi.yaml
-      TracingEnabled: true
-      MethodSettings:
-        - ResourcePath: "/*"
-          HttpMethod: "*"
-          LoggingLevel: "OFF"
-          MetricsEnabled: true
-          DataTraceEnabled: false
-      AccessLogSetting:
-        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
-        Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","authorizeStatus":"$context.authorize.status","authorizerStatus":"$context.authorizer.status","authorizerLatency":"$context.authorizer.latency","authorizerRequestId":"$context.authorizer.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId", "errorMessage":"$context.error.message", "validationError":"$context.error.validationErrorString"}'
 
   # ExportFunc:
   #   Type: AWS::Serverless::Function
@@ -156,14 +143,6 @@ Resources:
   #   Properties:
   #     LogGroupName: !Sub "/aws/lambda/${ExportFunc}"
   #     RetentionInDays: 365
-
-  # ExportFuncResourceBasedPolicy:
-  #   Type: AWS::Lambda::Permission
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !Sub '${ExportFunc.Arn}:live'
-  #     Principal: apigateway.amazonaws.com
-  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
 
   # ExportFuncArnParam:
   #   Type: AWS::SSM::Parameter
@@ -187,14 +166,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${ListFunc}"
       RetentionInDays: 365
 
-  ListFuncResourceBasedPolicy:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Sub '${ListFunc.Arn}:live'
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
-
   ListFuncArnParam:
     Type: AWS::SSM::Parameter
     Properties:
@@ -203,35 +174,27 @@ Resources:
       Value: !Sub '${ListFunc.Arn}'
       Description: ARN for the List function handler
 
-  # GetGameFunc:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     FunctionName: 'gameday-api-processor-getGame'
-  #     CodeUri: ./cmd/bin/getGame
-  #     Role:
-  #       !GetAtt FunctionRole.Arn
+  GetGameFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor-getGame'
+      CodeUri: ./cmd/bin/getGame
+      Role:
+        !GetAtt FunctionRole.Arn
 
-  # GetGameFuncLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/lambda/${GetGameFunc}"
-  #     RetentionInDays: 365
+  GetGameFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetGameFunc}"
+      RetentionInDays: 365
 
-  # GetGameFuncResourceBasedPolicy:
-  #   Type: AWS::Lambda::Permission
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !Sub '${GetGameFunc.Arn}:live'
-  #     Principal: apigateway.amazonaws.com
-  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
-
-  # GetGameFuncArnParam:
-  #   Type: AWS::SSM::Parameter
-  #   Properties:
-  #     Name: '/gameday-api-processor/function/getGame/arn'
-  #     Type: String
-  #     Value: !Sub '${GetGameFunc.Arn}'
-  #     Description: ARN for the Get Game function handler
+  GetGameFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/getGame/arn'
+      Type: String
+      Value: !Sub '${GetGameFunc.Arn}'
+      Description: ARN for the Get Game function handler
 
   # GetFileUrlFunc:
   #   Type: AWS::Serverless::Function
@@ -247,14 +210,6 @@ Resources:
   #     LogGroupName: !Sub "/aws/lambda/${GetFileUrlFunc}"
   #     RetentionInDays: 365
 
-  # GetFileUrlFuncResourceBasedPolicy:
-  #   Type: AWS::Lambda::Permission
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !Sub '${GetFileUrlFunc.Arn}:live'
-  #     Principal: apigateway.amazonaws.com
-  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
-
   # GetFileUrlFuncArnParam:
   #   Type: AWS::SSM::Parameter
   #   Properties:
@@ -262,34 +217,3 @@ Resources:
   #     Type: String
   #     Value: !Sub '${GetFileUrlFunc.Arn}'
   #     Description: ARN for the Get File URL function handler
-
-  ApplyApiGatewayCloudwatchGlobal:
-    Type: AWS::ApiGateway::Account
-    Properties:
-      CloudWatchRoleArn: !Ref ApiGatewayCloudwatchGlobalRole
-
-  ApiGatewayCloudwatchGlobalRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: apigateway.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: ApiGatewayCloudwatchGlobalRole
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:DescribeLogGroups
-                  - logs:DescribeLogStreams
-                  - logs:PutLogEvents
-                  - logs:GetLogEvents
-                  - logs:FilterLogEvents
-                Resource: '*'
