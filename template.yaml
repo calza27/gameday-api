@@ -183,6 +183,26 @@ Resources:
       Value: !GetAtt SimpleQueue.QueueName
       Description: Name for the Simple SQS Queue
 
+  SQSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-SQS-processor'
+      CodeUri: ./cmd/bin/function
+      Role:
+        !GetAtt FunctionRole.Arn
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SimpleQueue.Arn
+            BatchSize: 1
+
+  SQSFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${SQSFunction}"
+      RetentionInDays: 365
+
   ApplyApiGatewayCloudwatchGlobal:
     Type: AWS::ApiGateway::Account
     Properties:
