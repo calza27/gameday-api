@@ -13,7 +13,7 @@ STACK_NAME="GameDay-api"
 tags=$(./bin/parse-yaml.sh ./cf/tags.yaml) || die "failed to parse tags"
 bucket_name=$(aws ssm get-parameter --profile "$profile" --name /s3/cfn-bucket/name --query "Parameter.Value" --output text) || die "failed to get name of cfn bucket"
 
-# echo "Build code using iterative golang compiling"
+# echo "~~~ Build code using iterative golang compiling"
 # for path in ./cmd/*/; do
 #   dirname=$(basename "$path")
 
@@ -24,7 +24,7 @@ bucket_name=$(aws ssm get-parameter --profile "$profile" --name /s3/cfn-bucket/n
 #   cd ../..
 # done
 
-echo "Deploy SAM Stack"
+echo "~~~ Deploy SAM Stack"
 sam deploy \
   --tags "$tags" \
   --no-fail-on-empty-changeset \

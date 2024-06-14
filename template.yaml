@@ -26,7 +26,7 @@ Resources:
   StorageBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: GameDay-Export-Bucket
+      BucketName: gameday-export-bucket
 
   ExportDatabase:
     Type: AWS::DynamoDB::Table
@@ -173,35 +173,35 @@ Resources:
   #     Value: !Sub '${ExportFunc.Arn}'
   #     Description: ARN for the Export function handler
 
-  # ListFunc:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     FunctionName: 'gameday-api-processor-list'
-  #     CodeUri: ./cmd/bin/list
-  #     Role:
-  #       !GetAtt FunctionRole.Arn
+  ListFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor-list'
+      CodeUri: ./cmd/bin/list
+      Role:
+        !GetAtt FunctionRole.Arn
 
-  # ListFuncLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/lambda/${ListFunc}"
-  #     RetentionInDays: 365
+  ListFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ListFunc}"
+      RetentionInDays: 365
 
-  # ListFuncResourceBasedPolicy:
-  #   Type: AWS::Lambda::Permission
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !Sub '${ListFunc.Arn}:live'
-  #     Principal: apigateway.amazonaws.com
-  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+  ListFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '${ListFunc.Arn}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
 
-  # ListFuncArnParam:
-  #   Type: AWS::SSM::Parameter
-  #   Properties:
-  #     Name: '/gameday-api-processor/function/list/arn'
-  #     Type: String
-  #     Value: !Sub '${ListFunc.Arn}'
-  #     Description: ARN for the List function handler
+  ListFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/list/arn'
+      Type: String
+      Value: !Sub '${ListFunc.Arn}'
+      Description: ARN for the List function handler
 
   # GetGameFunc:
   #   Type: AWS::Serverless::Function
