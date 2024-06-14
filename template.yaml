@@ -129,6 +129,15 @@ Resources:
                   - dynamodb:Query
                 Resource:
                   - !GetAtt ExportDatabase.Arn
+        - PolicyName: ssm-access-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - "*"
 
   # ExportFunc:
   #   Type: AWS::Serverless::Function
