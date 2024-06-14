@@ -10,7 +10,7 @@ profile=$1
 
 STACK_NAME="GameDay-api"
 
-tags=$(./bin/parse-yaml.sh ./params/tags.yml) || die "failed to parse tags"
+tags=$(./bin/parse-yaml.sh ./params/tags.yaml) || die "failed to parse tags"
 
 echo "~~~ :aws: Build code using iterative golang compiling"
 for path in ./cmd/*/; do
