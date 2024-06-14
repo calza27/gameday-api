@@ -11,26 +11,24 @@ profile=$1
 STACK_NAME="GameDay-api"
 
 tags=$(./bin/parse-yaml.sh ./cf/tags.yaml) || die "failed to parse tags"
+bucket_name=$(aws ssm get-parameter --profile "$profile" --name /s3/cfn-bucket/name --query "Parameter.Value" --output text) || die "failed to get name of cfn bucket"
 
-echo "~~~ :aws: Build code using iterative golang compiling"
-for path in ./cmd/*/; do
-  dirname=$(basename "$path")
+# echo "Build code using iterative golang compiling"
+# for path in ./cmd/*/; do
+#   dirname=$(basename "$path")
 
-  echo "Building $dirname..."
+#   echo "Building $dirname..."
 
-  cd "./cmd/$dirname" || die "failed to cd into ./cmd/$dirname"
-  GOOS=linux GOARCH=amd64 go build -tags lambda.norpc -o "../bin/$dirname/bootstrap" "$dirname.go"
-  cd ../..
-done
+#   cd "./cmd/$dirname" || die "failed to cd into ./cmd/$dirname"
+#   GOOS=linux GOARCH=amd64 go build -tags lambda.norpc -o "../bin/$dirname/bootstrap" "$dirname.go"
+#   cd ../..
+# done
 
-echo "~~~ :aws: Deploy SAM Stack for branch $GIT_BRANCH"
+echo "Deploy SAM Stack"
 sam deploy \
-  --tags "${tags}" \
+  --tags "$tags" \
   --no-fail-on-empty-changeset \
+  --s3-bucket "${bucket_name}" \
   --stack-name "${STACK_NAME}" \
-  --s3-bucket "cfn-templates-3903---4367" \
-  --s3-prefix "${STACK_NAME}" \
-  --region "ap-southeast-2" \
-  --capabilities "CAPABILITY_IAM" "CAPABILITY_AUTO_EXPAND" \
-  --resolve-s3 \
-  --profile "$profile" || die "sam deploy failed"
+  --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+  --profile "${profile}"

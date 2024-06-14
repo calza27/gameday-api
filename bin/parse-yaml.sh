@@ -7,4 +7,4 @@ file=$1
 [[ -z $file ]] && die "Usage: $0 <file>"
 [[ ! -f $file ]] && die "File not found: $file"
 
-cat $file | yq '.* | "\"" + key + "=" + . + "\""' | tr '\n' ',' | sed 's/.\{1\}$//'
+cat $file | yq '.* | key + "=" + .' | tr '\n' ' ' | sed 's/.\{1\}$//'

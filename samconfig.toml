@@ -1,0 +1,6 @@
+version = 0.1
+[cal-personal.deploy.parameters]
+stack_name = "GameDay-api"
+s3_prefix = "GameDay-api"
+region = "ap-southeast-2"
+image_repositories = []
