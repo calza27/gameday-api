@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-die() { echo "${1:-argh}"; exit ${2:-1}; }
+die() { echo "${1:-argh}"; exit "${2:-1}"; }
 
 hash sam  2>/dev/null || die "missing dep: sam"
 hash aws  2>/dev/null || die "missing dep: aws"
 hash ./bin/parse-yaml.sh || die "parse-yaml.sh not found."
+
+profile=$1
+[[ -z $profile ]] && die "Usage: $0 <profile>"
 
 STACK_NAME="GameDay-api"
 
@@ -30,4 +33,4 @@ sam deploy \
   --region "ap-southeast-2" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_AUTO_EXPAND" \
   --resolve-s3 \
-  || die "sam deploy failed"
+  --profile "$profile" || die "sam deploy failed"
