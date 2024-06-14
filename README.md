@@ -4,9 +4,11 @@ API Gateway and Lambda functions to process requests for the GameDay API.
 
 # Ideas
 
-GET endpoints to get the current status of aspects of the game - trigger a lambda to return data from DynamoDB 
-    Current score
-    Scoring events
+GET Endpoints
+    List the games stored in the DDB
+    Get a specific game by ID
+    Get a URL to access a given file
 
-PUT/POST endpoints to create events
-    API Gateway -> SQS FIFO Queue (with DLQ) -> Lambda -> DynamoDB
+PUT Endpoints
+    Export game to CSV and PDF
+    If this ends up being a long action to execute, put an SQS Queue with DLQ between the gateway and lambda 

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: gameday-api > Public API to serve GameDay related metrics
+Description: gameday-api > Public API to serve GameDay data export
 
 Parameters:
   VpcId:
@@ -23,6 +23,22 @@ Globals:
         SubnetIds: !Ref SubnetIds
       
 Resources:
+  StorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: GameDay-Export-Bucket
+
+  ExportDatabase:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: GameDay_Exports
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -72,6 +88,30 @@ Resources:
                   - ec2:DeleteNetworkInterface
                 Resource:
                   - '*'
+        - PolicyName: bucket-access-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Resource:
+                  - !GetAtt StorageBucket.Arn
+        - PolicyName: bucket-access-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                Resource:
+                  - !GetAtt ExportDatabase.Arn
 
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
@@ -84,7 +124,7 @@ Resources:
     Properties:
       Name: !Ref 'AWS::StackName'
       StageName: api
-      Description: Public API to serve GameDay related metrics
+      Description: Public API to serve GameDay data export
       OpenApiVersion: '3.0.0'
       DefinitionBody:
         'Fn::Transform':
@@ -102,106 +142,125 @@ Resources:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
         Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","authorizeStatus":"$context.authorize.status","authorizerStatus":"$context.authorizer.status","authorizerLatency":"$context.authorizer.latency","authorizerRequestId":"$context.authorizer.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId", "errorMessage":"$context.error.message", "validationError":"$context.error.validationErrorString"}'
 
-  GameDayApiRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Policies:
-        - PolicyName: SendMessageToSQSPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              Effect: Allow
-              Action: sqs:SendMessage
-              Resource: !GetAtt SimpleQueue.Arn
-  
-  GameDayApiRoleParam:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: '/gameday-api/role/arn'
-      Type: String
-      Value: !GetAtt ApiRole.Arn
-      Description: ARN for the API Gateway Role
-
-  FunkyFunc:
+  ExportFunc:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: 'gameday-api-processor'
-      CodeUri: ./cmd/bin/function
+      FunctionName: 'gameday-api-processor-export'
+      CodeUri: ./cmd/bin/export
       Role:
         !GetAtt FunctionRole.Arn
 
-  FunkyFuncLogGroup:
+  ExportFuncLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${FunkyFunc}"
+      LogGroupName: !Sub "/aws/lambda/${ExportFunc}"
       RetentionInDays: 365
 
-  FunkyFuncResourceBasedPolicy:
+  ExportFuncResourceBasedPolicy:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Sub '${FunkyFunc.Arn}:live'
+      FunctionName: !Sub '${ExportFunc.Arn}:live'
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
 
-  FunkyFuncArnParam:
+  ExportFuncArnParam:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: '/gameday-api-processor/function/FunkyFunc/arn'
+      Name: '/gameday-api-processor/function/export/arn'
       Type: String
-      Value: !Sub '${FunkyFunc.Arn}'
-      Description: ARN for the Funky Func Processing Layer Handler
-  
-  DLQSimpleQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: DLQ-SimpleQueue
+      Value: !Sub '${ExportFunc.Arn}'
+      Description: ARN for the Export function handler
 
-  SimpleQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      FifoQueue: true
-      QueueName: SimpleQueue.fifo
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt DLQSimpleQueue.Arn
-        maxReceiveCount: 5
-
-  QueueNameParam:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: '/gameday-api-queue/simple/name'
-      Type: String
-      Value: !GetAtt SimpleQueue.QueueName
-      Description: Name for the Simple SQS Queue
-
-  SQSFunction:
+  ListFunc:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: 'gameday-api-SQS-processor'
-      CodeUri: ./cmd/bin/function
+      FunctionName: 'gameday-api-processor-list'
+      CodeUri: ./cmd/bin/list
       Role:
         !GetAtt FunctionRole.Arn
-      Events:
-        MySQSEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt SimpleQueue.Arn
-            BatchSize: 1
 
-  SQSFunctionLogGroup:
+  ListFuncLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${SQSFunction}"
+      LogGroupName: !Sub "/aws/lambda/${ListFunc}"
       RetentionInDays: 365
+
+  ListFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '${ListFunc.Arn}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  ListFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/list/arn'
+      Type: String
+      Value: !Sub '${ListFunc.Arn}'
+      Description: ARN for the List function handler
+
+  GetGameFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor-getGame'
+      CodeUri: ./cmd/bin/getGame
+      Role:
+        !GetAtt FunctionRole.Arn
+
+  GetGameFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetGameFunc}"
+      RetentionInDays: 365
+
+  GetGameFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '${GetGameFunc.Arn}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  GetGameFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/getGame/arn'
+      Type: String
+      Value: !Sub '${GetGameFunc.Arn}'
+      Description: ARN for the Get Game function handler
+
+  GetFileUrlFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor-getFileUrl'
+      CodeUri: ./cmd/bin/getFileUrl
+      Role:
+        !GetAtt FunctionRole.Arn
+
+  GetFileUrlFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetFileUrlFunc}"
+      RetentionInDays: 365
+
+  GetFileUrlFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '${GetFileUrlFunc.Arn}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+
+  GetFileUrlFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/getFileUrl/arn'
+      Type: String
+      Value: !Sub '${GetFileUrlFunc.Arn}'
+      Description: ARN for the Get File URL function handler
 
   ApplyApiGatewayCloudwatchGlobal:
     Type: AWS::ApiGateway::Account
