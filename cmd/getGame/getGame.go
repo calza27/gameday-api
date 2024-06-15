@@ -21,23 +21,25 @@ func main() {
 func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	gameId := request.PathParameters["id"]
 	if gameId == "" {
-		utils.BuildResponse(fmt.Sprintf("No gameId supplied in path!"), 400, nil)
+		return utils.BuildResponse(fmt.Sprintf("No gameId supplied in path!"), 400, nil), nil
 	}
 	exportsTable, err := GetDynamoDBTableName(ctx)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
 	exportRepo, err := repositories.NewExportRepository(ctx, exportsTable)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
+	fmt.Printf("Getting export for Id %s.\n", gameId)
 	export, err := exportRepo.GetExport(gameId)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
+	fmt.Printf("Export found: %v\n", export)
 	data, err := json.Marshal(export)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
 	return utils.BuildResponse(string(data), 200, nil), nil
 }

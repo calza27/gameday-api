@@ -21,19 +21,21 @@ func main() {
 func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	exportsTable, err := GetDynamoDBTableName(ctx)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
 	exportRepo, err := repositories.NewExportRepository(ctx, exportsTable)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
+	fmt.Printf("Listing exports\n")
 	exports, err := exportRepo.ListExports()
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
+	fmt.Printf("%d exports listed\n", len(exports))
 	data, err := json.Marshal(exports)
 	if err != nil {
-		utils.BuildResponse(err.Error(), 500, nil)
+		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
 	return utils.BuildResponse(string(data), 200, nil), nil
 }

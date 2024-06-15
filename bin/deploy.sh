@@ -34,6 +34,7 @@ sam deploy \
   --no-fail-on-empty-changeset \
   --s3-bucket "${bucket_name}" \
   --stack-name "${STACK_NAME}-processing" \
+  --s3-prefix "${STACK_NAME}-processing" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
   --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-processing"
 
@@ -43,6 +44,7 @@ sam deploy \
   --no-fail-on-empty-changeset \
   --s3-bucket "${bucket_name}" \
   --stack-name "${STACK_NAME}-gateway" \
+  --s3-prefix "${STACK_NAME}-gateway" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
   --template "./gateway.yaml" \
   --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-gateway"
