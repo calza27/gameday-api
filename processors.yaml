@@ -20,8 +20,8 @@ Globals:
   Function:
     Handler: bootstrap
     Runtime: provided.al2
-    Timeout: 120
-    MemorySize: 256
+    Timeout: 30
+    MemorySize: 128
     AutoPublishAlias: live
     VpcConfig:
         SecurityGroupIds:
