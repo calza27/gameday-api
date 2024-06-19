@@ -3,59 +3,33 @@ Transform: AWS::Serverless-2016-10-31
 Description: gameday-api > Public API processing to serve GameDay data export
 
 Parameters:
+  SubnetId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /network/app-subnet
   VpcId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /network/vpc-id
-  SubnetIds:
-    Type: AWS::SSM::Parameter::Value<List<String>>
-    Default: /network/appSubnets
+  S3BucketArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /gameday-api-processor/s3/arn
+  DatabaseArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /gameday-api-processor/ddb/arn
 
 Globals:
   Function:
     Handler: bootstrap
     Runtime: provided.al2
-    Timeout: 300
+    Timeout: 120
     MemorySize: 256
     AutoPublishAlias: live
     VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroup
-        SubnetIds: !Ref SubnetIds
+        SubnetIds:
+          - !Ref SubnetId
       
 Resources:
-  StorageBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: gameday-export-bucket
-
-  BucketNameParam:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: '/gameday-api-processor/s3/name'
-      Type: String
-      Value: !Ref StorageBucket
-      Description: Name of the S3 bucket to store exports in
-  
-  ExportDatabase:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: GameDay_Exports
-      AttributeDefinitions: 
-        - AttributeName: id
-          AttributeType: S
-      KeySchema: 
-        - AttributeName: id
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-
-  DatabaseNameParam:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: '/gameday-api-processor/ddb/name'
-      Type: String
-      Value: !Ref ExportDatabase
-      Description: Name of the DynamoDB dabase that export information is stored in
-
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -71,6 +45,7 @@ Resources:
   FunctionRole:
     Type: AWS::IAM::Role
     Properties:
+      Description: Lambda role for api-processors
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -80,8 +55,8 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Description: Lambda role for api-processors
-      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Policies:
         - PolicyName: logs-policy
           PolicyDocument:
@@ -116,7 +91,8 @@ Resources:
                   - s3:ListBucket
                   - s3:DeleteObject
                 Resource:
-                  - !GetAtt StorageBucket.Arn
+                  - !Ref S3BucketArn
+                  - !Sub '${S3BucketArn}/*'
         - PolicyName: dynamoDB-access-policy
           PolicyDocument:
             Version: '2012-10-17'
@@ -128,7 +104,7 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:Query
                 Resource:
-                  - !GetAtt ExportDatabase.Arn
+                  - !Ref DatabaseArn
         - PolicyName: ssm-access-policy
           PolicyDocument:
             Version: '2012-10-17'
@@ -205,24 +181,24 @@ Resources:
       Value: !Sub '${GetGameFunc.Arn}'
       Description: ARN for the Get Game function handler
 
-  # GetFileUrlFunc:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     FunctionName: 'gameday-api-processor-getFileUrl'
-  #     CodeUri: ./cmd/bin/getFileUrl
-  #     Role:
-  #       !GetAtt FunctionRole.Arn
+  GetFileUrlFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor-getFileUrl'
+      CodeUri: ./cmd/bin/getFileUrl
+      Role:
+        !GetAtt FunctionRole.Arn
 
-  # GetFileUrlFuncLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/lambda/${GetFileUrlFunc}"
-  #     RetentionInDays: 365
+  GetFileUrlFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetFileUrlFunc}"
+      RetentionInDays: 365
 
-  # GetFileUrlFuncArnParam:
-  #   Type: AWS::SSM::Parameter
-  #   Properties:
-  #     Name: '/gameday-api-processor/function/getFileUrl/arn'
-  #     Type: String
-  #     Value: !Sub '${GetFileUrlFunc.Arn}'
-  #     Description: ARN for the Get File URL function handler
+  GetFileUrlFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/getFileUrl/arn'
+      Type: String
+      Value: !Sub '${GetFileUrlFunc.Arn}'
+      Description: ARN for the Get File URL function handler

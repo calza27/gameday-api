@@ -11,7 +11,7 @@ API Gateway and Lambda functions to process requests for the GameDay API.
 GET Endpoints
     List the games stored in the DDB
     Get a specific game by ID
-    Get a URL to access a given file
+    Get a URL to access a given file - https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_Scenario_PresignedUrl_section.html
 
 PUT Endpoints
     Export game to CSV and PDF

@@ -43,14 +43,14 @@ func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 func GetDynamoDBTableName(ctx context.Context) (string, error) {
 	ssmClient, err := awsclient.GetSsmClient()
 	if err != nil {
-		return "", fmt.Errorf("Error initializing connection to SSM: %w", err)
+		return "", fmt.Errorf("error initializing connection to SSM: %w", err)
 	}
 	params := &ssm.GetParameterInput{
 		Name: aws.String("/gameday-api-processor/ddb/name"),
 	}
 	ddbName, err := ssmClient.GetParameter(ctx, params)
 	if err != nil {
-		return "", fmt.Errorf("Error when getting parameter: %w", err)
+		return "", fmt.Errorf("error when getting parameter: %w", err)
 	}
 	return *ddbName.Parameter.Value, nil
 }

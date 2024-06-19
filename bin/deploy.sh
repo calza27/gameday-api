@@ -28,15 +28,27 @@ for path in ./cmd/*/; do
   cd ../..
 done
 
+echo "~~~ Deploy infra stack"
+sam deploy \
+  --tags "$tags" \
+  --no-fail-on-empty-changeset \
+  --s3-bucket "${bucket_name}" \
+  --stack-name "${STACK_NAME}-infra" \
+  --s3-prefix "${STACK_NAME}-infra" \
+  --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+  --template "./infra.yaml" \
+  --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-infra"
+
 echo "~~~ Deploy processor stack"
 sam deploy \
   --tags "$tags" \
   --no-fail-on-empty-changeset \
   --s3-bucket "${bucket_name}" \
-  --stack-name "${STACK_NAME}-processing" \
-  --s3-prefix "${STACK_NAME}-processing" \
+  --stack-name "${STACK_NAME}-processors" \
+  --s3-prefix "${STACK_NAME}-processors" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-  --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-processing"
+  --template "./processors.yaml" \
+  --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-processors"
 
 echo "~~~ Deploy gateway stack"
 sam deploy \

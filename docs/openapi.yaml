@@ -116,36 +116,36 @@ paths:
         type: "aws_proxy"
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/getGame/arn}}:live/invocations"
-  # /gameday/getFileUrl/{file}:
-  #   get:
-  #     summary: Get the URL to access the file for the given file name
-  #     description: "Get the URL to access the file for the given file name"
-  #     operationId: getFileUrl
-  #     parameters:
-  #       - name: file
-  #         in: path
-  #         description: the name of the file to get the access URL for
-  #         required: true
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: "Success"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: string
-  #       "404":
-  #         $ref: "#/components/responses/NotFound"
-  #       "500":
-  #         $ref: "#/components/responses/InternalServerError"
-  #     deprecated: false
-  #     x-amazon-apigateway-request-validator: "basic"
-  #     x-amazon-apigateway-integration:
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/getFileUrl/arn}}:live/invocations"
+  /gameday/getFileUrl/{file}:
+    get:
+      summary: Get the URL to access the file for the given file name
+      description: "Get the URL to access the file for the given file name"
+      operationId: getFileUrl
+      parameters:
+        - name: file
+          in: path
+          description: the name of the file to get the access URL for
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      deprecated: false
+      x-amazon-apigateway-request-validator: "basic"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/getFileUrl/arn}}:live/invocations"
 components:
   responses:
     NoContent:
