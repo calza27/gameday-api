@@ -23,15 +23,15 @@ func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	if fileName == "" {
 		return utils.BuildResponse("No file name supplied in path!", 400, nil), nil
 	}
-	s3Client, err := awsclient.GetS3Client()
-	if err != nil {
-		return utils.BuildResponse(err.Error(), 500, nil), nil
-	}
 	s3BucketName, err := GetS3BucketeName(ctx)
 	if err != nil {
 		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
 	fileLifespan, err := GetFileUrlLifeSpan(ctx)
+	if err != nil {
+		return utils.BuildResponse(err.Error(), 500, nil), nil
+	}
+	s3Client, err := awsclient.GetS3Client()
 	if err != nil {
 		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
