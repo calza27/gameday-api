@@ -37,6 +37,7 @@ sam deploy \
   --s3-prefix "${STACK_NAME}-infra" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
   --template "./infra.yaml" \
+  --region "ap-southeast-2" \
   --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-infra"
 
 echo "~~~ Deploy processor stack"
@@ -48,6 +49,7 @@ sam deploy \
   --s3-prefix "${STACK_NAME}-processors" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
   --template "./processors.yaml" \
+  --region "ap-southeast-2" \
   --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-processors"
 
 echo "~~~ Deploy gateway stack"
@@ -59,6 +61,7 @@ sam deploy \
   --s3-prefix "${STACK_NAME}-gateway" \
   --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
   --template "./gateway.yaml" \
+  --region "ap-southeast-2" \
   --profile "${profile}" || die "failed to deploy stack "$STACK_NAME"-gateway"
 
 echo "~~ cleaning up"
