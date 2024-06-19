@@ -119,7 +119,7 @@ Resources:
   #   Type: AWS::Serverless::Function
   #   Properties:
   #     FunctionName: 'gameday-api-processor-export'
-  #     CodeUri: ./cmd/bin/export
+  #     CodeUri: ../cmd/bin/export
   #     Role:
   #       !GetAtt FunctionRole.Arn
 
@@ -141,7 +141,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: 'gameday-api-processor-list'
-      CodeUri: ./cmd/bin/list
+      CodeUri: ../cmd/bin/list
       Role:
         !GetAtt FunctionRole.Arn
 
@@ -163,7 +163,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: 'gameday-api-processor-getGame'
-      CodeUri: ./cmd/bin/getGame
+      CodeUri: ../cmd/bin/getGame
       Role:
         !GetAtt FunctionRole.Arn
 
@@ -185,7 +185,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: 'gameday-api-processor-getFileUrl'
-      CodeUri: ./cmd/bin/getFileUrl
+      CodeUri: ../cmd/bin/getFileUrl
       Role:
         !GetAtt FunctionRole.Arn
 
