@@ -65,18 +65,18 @@ func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	}
 
 	pdfFileName := fmt.Sprintf("%s.pdf", uuid.New().String())
-	// pdfFile, err := filebuilder.BuildPdf(gameData)
-	// if err != nil {
-	// 	return utils.BuildResponse(err.Error(), 500, nil), nil
-	// }
-	// _, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
-	// 	Bucket: aws.String(s3BucketName),
-	// 	Key:    aws.String(pdfFileName),
-	// 	Body:   bytes.NewReader(pdfFile),
-	// })
-	// if err != nil {
-	// 	return utils.BuildResponse(err.Error(), 500, nil), nil
-	// }
+	pdfFile, err := filebuilder.BuildPdf(gameData)
+	if err != nil {
+		return utils.BuildResponse(err.Error(), 500, nil), nil
+	}
+	_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s3BucketName),
+		Key:    aws.String(pdfFileName),
+		Body:   bytes.NewReader(pdfFile),
+	})
+	if err != nil {
+		return utils.BuildResponse(err.Error(), 500, nil), nil
+	}
 
 	export := models.Export{
 		Id:      uuid.New().String(),

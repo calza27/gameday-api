@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.6
 	github.com/google/uuid v1.6.0
+	github.com/jung-kurt/gofpdf v1.16.2
 )
 
 require (
