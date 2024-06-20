@@ -5,7 +5,7 @@ Description: gameday-api > Public API processing to serve GameDay data export
 Parameters:
   SubnetId:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: /network/app-subnet
+    Default: /network/private-subnet
   VpcId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /network/vpc-id
