@@ -11,4 +11,6 @@ GET Endpoints
 
 PUT Endpoints
     Export game to CSV and PDF
-        If this ends up being a long action to execute, put an SQS Queue with DLQ between the gateway and lambda 
+        https://unidoc.io/post/write-pdfs-in-golang-beginners-guide/
+        https://pkg.go.dev/github.com/jung-kurt/gofpdf/v2#section-readme
+        https://pkg.go.dev/github.com/jung-kurt/gofpdf/v2#Pdf
