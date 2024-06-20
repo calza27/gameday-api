@@ -37,29 +37,29 @@ x-amazon-apigateway-gateway-responses:
       gatewayresponse.header.X-FRAME-OPTIONS: "'DENY'"
       gatewayresponse.header.X-Content-Type-Options: "'nosniff'"
 paths:
-  # /gameday/export:
-  #   put:
-  #     summary: Export the data to a file
-  #     description: "Export the data to a file"
-  #     operationId: export
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: "#/components/schemas/gameData"
-  #       required: true
-  #     responses:
-  #       "201":
-  #         description: "Success"
-  #       "500":
-  #         $ref: "#/components/responses/InternalServerError"
-  #     deprecated: false
-  #     x-amazon-apigateway-request-validator: "basic"
-  #     x-amazon-apigateway-integration:
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/export/arn}}:live/invocations"
+  /gameday/export:
+    put:
+      summary: Export the data to a file
+      description: "Export the data to a file"
+      operationId: export
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/gameData"
+        required: true
+      responses:
+        "201":
+          description: "Success"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      deprecated: false
+      x-amazon-apigateway-request-validator: "basic"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/{{resolve:ssm:/gameday-api-processor/function/export/arn}}:live/invocations"
   /gameday/list:
     get:
       summary: List the previously exported games

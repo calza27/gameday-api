@@ -115,27 +115,27 @@ Resources:
                 Resource:
                   - "*"
 
-  # ExportFunc:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     FunctionName: 'gameday-api-processor-export'
-  #     CodeUri: ../cmd/bin/export
-  #     Role:
-  #       !GetAtt FunctionRole.Arn
+  ExportFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 'gameday-api-processor-export'
+      CodeUri: ../cmd/bin/export
+      Role:
+        !GetAtt FunctionRole.Arn
 
-  # ExportFuncLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/lambda/${ExportFunc}"
-  #     RetentionInDays: 365
+  ExportFuncLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ExportFunc}"
+      RetentionInDays: 365
 
-  # ExportFuncArnParam:
-  #   Type: AWS::SSM::Parameter
-  #   Properties:
-  #     Name: '/gameday-api-processor/function/export/arn'
-  #     Type: String
-  #     Value: !Sub '${ExportFunc.Arn}'
-  #     Description: ARN for the Export function handler
+  ExportFuncArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/gameday-api-processor/function/export/arn'
+      Type: String
+      Value: !Sub '${ExportFunc.Arn}'
+      Description: ARN for the Export function handler
 
   ListFunc:
     Type: AWS::Serverless::Function

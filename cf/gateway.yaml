@@ -23,13 +23,13 @@ Resources:
           MetricsEnabled: true
           DataTraceEnabled: false
 
-  # ExportFuncResourceBasedPolicy:
-  #   Type: AWS::Lambda::Permission
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !Sub '{{resolve:ssm:/gameday-api-processor/function/export/arn}}:live'
-  #     Principal: apigateway.amazonaws.com
-  #     SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
+  ExportFuncResourceBasedPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub '{{resolve:ssm:/gameday-api-processor/function/export/arn}}:live'
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${GameDayApi}/*/*/*'
 
   ListFuncResourceBasedPolicy:
     Type: AWS::Lambda::Permission
