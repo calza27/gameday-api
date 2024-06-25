@@ -3,12 +3,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: gameday-api > Public API processing to serve GameDay data export
 
 Parameters:
-  SubnetId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /network/private-subnet
-  VpcId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /network/vpc-id
   S3BucketArn:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /gameday-api-processor/s3/arn
@@ -23,25 +17,8 @@ Globals:
     Timeout: 30
     MemorySize: 128
     AutoPublishAlias: live
-    VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroup
-        SubnetIds:
-          - !Ref SubnetId
       
 Resources:
-  SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security group for api-processors
-      VpcId: !Ref VpcId
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-          Description: Allow all traffic on port 443
-
   FunctionRole:
     Type: AWS::IAM::Role
     Properties:

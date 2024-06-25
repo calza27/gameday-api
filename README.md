@@ -2,10 +2,6 @@
 
 API Gateway and Lambda functions to process requests for the GameDay API.
 
-# Topology and Network
-
-![topology](./network.png)
-
 # Ideas
 
 GET Endpoints
