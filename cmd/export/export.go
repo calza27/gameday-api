@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -78,11 +79,13 @@ func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 		return utils.BuildResponse(err.Error(), 500, nil), nil
 	}
 
+	now := time.Now()
 	export := models.Export{
-		Id:      uuid.New().String(),
-		Name:    buildRecordName(gameData),
-		PdfFile: pdfFileName,
-		CsvFile: csvFileName,
+		Id:             uuid.New().String(),
+		Name:           buildRecordName(gameData),
+		PdfFile:        pdfFileName,
+		CsvFile:        csvFileName,
+		GenerationDate: now.Format(time.DateTime),
 	}
 	err = exportRepo.PutExport(export)
 	if err != nil {

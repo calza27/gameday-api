@@ -26,7 +26,7 @@ type Player struct {
 
 type ScoringEvent struct {
 	Id             string `json:"Id"`
-	Quarter        int    `json:"Quarter"`
+	Quarter        string `json:"Quarter"`
 	Team           string `json:"Team"`
 	ScoreEvent     string `json:"ScoreEvent"`
 	GoalScorer     string `json:"GoalScorer"`
@@ -39,7 +39,7 @@ type ScoringEvent struct {
 
 type QuarterTime struct {
 	Id      string `json:"Id"`
-	Quarter int    `json:"Quarter"`
+	Quarter string `json:"Quarter"`
 	Time    string `json:"Time"`
 }
 

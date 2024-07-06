@@ -3,6 +3,12 @@ Transform: AWS::Serverless-2016-10-31
 Description: gameday-api > Public API gateway to serve GameDay data export
       
 Resources:
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${AWS::StackName}-access-logs'
+      RetentionInDays: 365
+
   GameDayApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -19,9 +25,17 @@ Resources:
       MethodSettings:
         - ResourcePath: "/*"
           HttpMethod: "*"
-          LoggingLevel: "OFF"
+          LoggingLevel: "INFO"
           MetricsEnabled: true
-          DataTraceEnabled: false
+          DataTraceEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiLogGroup.Arn
+        Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","authorizeStatus":"$context.authorize.status","authorizerStatus":"$context.authorizer.status","authorizerLatency":"$context.authorizer.latency","authorizerRequestId":"$context.authorizer.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId", "errorMessage":"$context.error.message", "validationError":"$context.error.validationErrorString"}'
+      Cors:
+        AllowMethods: "'PUT, GET'"
+        AllowHeaders: "'Content-Type'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
 
   ExportFuncResourceBasedPolicy:
     Type: AWS::Lambda::Permission

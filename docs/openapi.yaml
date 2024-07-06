@@ -7,7 +7,7 @@ info:
   contact: {}
   version: "1.0"
 servers:
-  - url: https://api.gameday.com/api
+  - url: https://4l1kzy0s2i.execute-api.ap-southeast-2.amazonaws.com/api
     description: GameDay dev server
 x-amazon-apigateway-request-validators:
   basic:
@@ -206,7 +206,6 @@ components:
           type: string
         GameDate:
           type: string
-          format: date
         Competition:
           type: string
         TeamA:
@@ -257,7 +256,7 @@ components:
         Id:
           type: string
         Quarter:
-          type: number
+          type: string
         Team:
           type: string
         ScoreEvent:
@@ -280,7 +279,7 @@ components:
         Id:
           type: string
         Quarter:
-          type: number
+          type: string
         Time:
           type: string
     appStorage:

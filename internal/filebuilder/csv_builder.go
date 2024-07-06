@@ -35,7 +35,7 @@ func BuildCsv(gameData models.GameData) ([]byte, error) {
 	//scoring table
 	data = append(data, []string{"id", "quarter", "team", "ScoreEvent", "goalScorer", "scoreType", "HCWorm", "LauncherNo", "typeNumber", "OpWorm"})
 	for _, scoringEvent := range gameData.ScoringEvents {
-		data = append(data, []string{scoringEvent.Id, fmt.Sprintf("%d", scoringEvent.Quarter), scoringEvent.Team, scoringEvent.ScoreEvent, scoringEvent.GoalScorer, scoringEvent.ScoreType, fmt.Sprintf("%d", scoringEvent.HCWorm), fmt.Sprintf("%d", scoringEvent.LauncherNumber), fmt.Sprintf("%d", scoringEvent.TypeNumber), fmt.Sprintf("%d", scoringEvent.OpWorm)})
+		data = append(data, []string{scoringEvent.Id, scoringEvent.Quarter, scoringEvent.Team, scoringEvent.ScoreEvent, scoringEvent.GoalScorer, scoringEvent.ScoreType, fmt.Sprintf("%d", scoringEvent.HCWorm), fmt.Sprintf("%d", scoringEvent.LauncherNumber), fmt.Sprintf("%d", scoringEvent.TypeNumber), fmt.Sprintf("%d", scoringEvent.OpWorm)})
 	}
 	data = append(data, []string{string('\u200B')})
 	w.WriteAll(data)
@@ -45,7 +45,7 @@ func BuildCsv(gameData models.GameData) ([]byte, error) {
 	//quarter time table
 	data = append(data, []string{"id", "quarter", "time"})
 	for _, quarterTime := range gameData.QuarterTimes {
-		data = append(data, []string{quarterTime.Id, fmt.Sprintf("%d", quarterTime.Quarter), quarterTime.Time})
+		data = append(data, []string{quarterTime.Id, quarterTime.Quarter, quarterTime.Time})
 	}
 	data = append(data, []string{string('\u200B')})
 	w.WriteAll(data)
