@@ -1,6 +1,6 @@
 module GameDay-API
 
-go 1.21.6
+go 1.25.4
 
 require (
 	github.com/aws/aws-lambda-go v1.47.0
