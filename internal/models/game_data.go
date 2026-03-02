@@ -11,7 +11,7 @@ type GameData struct {
 	TeamBAbbr     string            `json:"TeamBAbbr"`
 	Level         string            `json:"Level"`
 	Round         string            `json:"Round"`
-	SummaryBools  bool              `json:"SummaryBools"`
+	SummaryBools  string            `json:"SummaryBools"`
 	SummaryTitles string            `json:"SummaryTitles"`
 	TeamAPlayers  []Player          `json:"TeamAPlayers"`
 	ScoringEvents []ScoringEvent    `json:"ScoringEvents"`
