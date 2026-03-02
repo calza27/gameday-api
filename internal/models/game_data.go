@@ -11,6 +11,8 @@ type GameData struct {
 	TeamBAbbr     string            `json:"TeamBAbbr"`
 	Level         string            `json:"Level"`
 	Round         string            `json:"Round"`
+	SummaryBools  bool              `json:"SummaryBools"`
+	SummaryTitles string            `json:"SummaryTitles"`
 	TeamAPlayers  []Player          `json:"TeamAPlayers"`
 	ScoringEvents []ScoringEvent    `json:"ScoringEvents"`
 	QuarterTimes  []QuarterTime     `json:"QuarterTimes"`
@@ -22,6 +24,7 @@ type Player struct {
 	Surname   string `json:"Surname"`
 	GivenName string `json:"GivenName"`
 	Number    int    `json:"Number"`
+	Selected  bool   `json:"Selected"`
 }
 
 type ScoringEvent struct {

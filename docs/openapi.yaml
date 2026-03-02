@@ -222,6 +222,10 @@ components:
           type: string
         Round:
           type: string
+        SummaryBools:
+          type: string
+        SummaryTitles:
+          type: string
         TeamAPlayers:
           type: array
           items:
@@ -250,6 +254,8 @@ components:
           type: string
         Number:
           type: number
+        Selected:
+          type: boolean
     scoringEvent:
       title: Scoring Event
       properties:
