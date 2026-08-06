@@ -19,6 +19,8 @@ func (bwc *ByteWriteCloser) Close() error {
 	return nil
 }
 
+// TODO: Build out this process to lay the information out in a PDF that is readable and well presented
+
 func BuildPdf(data models.GameData) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
